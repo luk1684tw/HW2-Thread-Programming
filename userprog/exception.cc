@@ -121,7 +121,6 @@ ExceptionHandler(ExceptionType which)
 		case SC_PrintInt:
 			DEBUG(dbgAddr, "Print Integer\n");
 			val = kernel->machine->ReadRegister(4);
-			cout << "Val = " << val << "\n";
 			SysPrintInt(val);
 			{
 			/* set previous programm counter (debugging only)*/
