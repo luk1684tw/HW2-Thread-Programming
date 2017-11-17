@@ -239,7 +239,7 @@ Kernel::NetworkTest() {
         postOfficeOut->Send(outPktHdr, outMailHdr, ack); 
 
         // Wait for the ack from the other machine to the first message we sent
-	postOfficeIn->Receive(1, &inPktHdr, &inMailHdr, buffer);
+	    postOfficeIn->Receive(1, &inPktHdr, &inMailHdr, buffer);
         cout << "Got: " << buffer << " : from " << inPktHdr.from << ", box " 
                                                 << inMailHdr.from << "\n";
         cout.flush();
@@ -260,6 +260,7 @@ void ForkExecute(Thread *t)
 
 void Kernel::ExecAll()
 {
+
 	for (int i=1;i<=execfileNum;i++) {
 		int a = Exec(execfile[i]);
 	}
@@ -271,7 +272,7 @@ void Kernel::ExecAll()
 int Kernel::Exec(char* name)
 {
 	t[threadNum] = new Thread(name, threadNum);
-	t[threadNum]->space = new AddrSpace();
+	t[threadNum]->space = new AddrSpace(usedPhysicalPage);
 	t[threadNum]->Fork((VoidFunctionPtr) &ForkExecute, (void *)t[threadNum]);
 	threadNum++;
 
