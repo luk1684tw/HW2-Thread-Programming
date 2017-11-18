@@ -162,7 +162,7 @@ AddrSpace::Load(char *fileName)
     unsigned int code_size = noffH.code.size;
     unsigned int virtual_addr = noffH.code.virtualAddr;
     unsigned int infile_addr = noffH.code.inFileAddr;
-    unsigned int phyaddr = 0,times = 0;
+    unsigned int phyaddr = 0;
 
     //handle code segment
     if (code_size > 0) {
@@ -171,17 +171,16 @@ AddrSpace::Load(char *fileName)
         
         while(code_size > 0) {
             // cout << "\n[!] code_size remain: " << code_size << endl;
-            exception = Translate(virtual_addr + times, &phyaddr, 0);
+            exception = Translate(virtual_addr, &phyaddr, 0);
             // cout << "[!] code_segment exception: " << exception << endl << "[!]phyaddr: " << phyaddr <<endl;
-            executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), PageSize, infile_addr + times);
-
-            times += PageSize;
-            code_size -= PageSize;
-
             if (code_size <= PageSize) {
-                exception = Translate(virtual_addr + times, &phyaddr, 0);
-                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), PageSize, infile_addr + times);
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), code_size, infile_addr);
                 code_size = 0;
+            } else {
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), PageSize, infile_addr);
+                code_size -= PageSize;
+                virtual_addr += PageSize;
+                inline_addr += PageSize;
             }
         }
     }
