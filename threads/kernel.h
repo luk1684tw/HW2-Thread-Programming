@@ -68,7 +68,7 @@ class Kernel {
     PostOfficeOutput *postOfficeOut;
 
     int hostName;               // machine identifier
-    bool  usedPhysicalPage[NumPhysPages] = {};
+    bool  usedPhysicalPage[NumPhysPages];
   private:
 
 	Thread* t[10];

@@ -150,35 +150,78 @@ AddrSpace::Load(char *fileName)
     bzero(kernel->machine->mainMemory, MemorySize);
 // then, copy in the code and data segments into memory
 // Note: this code assumes that virtual address = physical address
-    if (noffH.code.size > 0) {
+    
+    ExceptionType exception;
+    unsigned int code_size = noffH.code.size;
+    unsigned int virtual_addr = noffH.code.virtualAddr;
+    unsigned int infile_addr = noffH.code.inFileAddr;
+    unsigned int phyaddr;
+
+    //handle code segment
+    if (code_size > 0) {
         DEBUG(dbgAddr, "Initializing code segment.");
     	DEBUG(dbgAddr, noffH.code.virtualAddr << ", " << noffH.code.size);
-
-        unsigned int *phyaddr;
-        ExceptionType exception = Translate(noffH.code.virtualAddr, phyaddr, 0);
-        ASSERT(exception == NoException);
-        executable->ReadAt(
-		    &(kernel->machine->mainMemory[*phyaddr]), 
-			noffH.code.size, noffH.code.inFileAddr
-        );
+        
+        while(code_size > 0) {
+            //cout << "[!] code_size remain: " << code_size << endl;
+            exception = Translate(virtual_addr, &phyaddr, 0);
+            ASSERT(exception == NoException);
+            if (code_size <= PageSize) {
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), code_size, infile_addr);
+                break;
+            } else {
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), PageSize, infile_addr);
+                code_size -= PageSize;
+                virtual_addr += PageSize;
+                infile_addr += PageSize;
+            }
+        }
+        
     }
-    if (noffH.initData.size > 0) {
+
+    // handle data segment
+    code_size = noffH.initData.size;
+    virtual_addr = noffH.initData.virtualAddr;
+    infile_addr = noffH.initData.inFileAddr;
+    if (code_size > 0) {
         DEBUG(dbgAddr, "Initializing data segment.");
 	    DEBUG(dbgAddr, noffH.initData.virtualAddr << ", " << noffH.initData.size);
-        executable->ReadAt(
-		    &(kernel->machine->mainMemory[noffH.initData.virtualAddr]),
-			noffH.initData.size, noffH.initData.inFileAddr
-        );
+        while(code_size > 0) {
+            //cout << "[!] data_size remain: " << code_size << endl;
+            exception = Translate(virtual_addr, &phyaddr, 0);
+            if (code_size < PageSize) {
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), code_size, infile_addr);
+                break;
+            } else {
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), PageSize, infile_addr);
+                code_size -= PageSize;
+                virtual_addr += PageSize;
+                infile_addr += PageSize;
+            }
+        }
     }
 
 #ifdef RDATA
-    if (noffH.readonlyData.size > 0) {
+    code_size = noffH.readonlyData.size;
+    virtual_addr = noffH.readonlyData.virtualAddr;
+    infile_addr = noffH.readonlyData.inFileAddr;
+
+    if (code_size > 0) {
         DEBUG(dbgAddr, "Initializing read only data segment.");
-	DEBUG(dbgAddr, noffH.readonlyData.virtualAddr << ", " << noffH.readonlyData.size);
-        executable->ReadAt(
-		    &(kernel->machine->mainMemory[noffH.readonlyData.virtualAddr]),
-			noffH.readonlyData.size, noffH.readonlyData.inFileAddr
-        );
+	    DEBUG(dbgAddr, noffH.readonlyData.virtualAddr << ", " << noffH.readonlyData.size);
+        while (code_size > 0) {
+            //cout << "[!] RDATA_size remain: " << code_size << endl;
+            exception = Translate(virtual_addr , &phyaddr ,0);
+            if (code_size < PageSize) {
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), code_size, infile_addr);
+                break;
+            } else {
+                executable->ReadAt(&(kernel->machine->mainMemory[phyaddr]), PageSize, infile_addr);
+                code_size -= PageSize;
+                virtual_addr += PageSize;
+                infile_addr += PageSize;
+            }
+        }
     }
 #endif
 
