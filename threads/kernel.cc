@@ -31,7 +31,7 @@ Kernel::Kernel(int argc, char **argv)
     consoleIn = NULL;          // default is stdin
     consoleOut = NULL;         // default is stdout
     for (int i = 0; i < NumPhysPages; i++) {
-        usedPhysicalPage[i] = false;
+        usedPhysicalPage[i] = FALSE;
     }
 #ifndef FILESYS_STUB
     formatFlag = FALSE;
